@@ -2,15 +2,18 @@
 # omaplex installer for Omarchy (Lua Hyprland config, Omarchy 3.x "Quattro"+).
 #
 #   ./install.sh               install from this checkout
-#   curl -fsSL https://raw.githubusercontent.com/aplaceforallmystuff/omaplex/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/squatchware/omaplex/main/install.sh | bash
 #                              clone to ~/.local/share/omaplex and install
 #   ./install.sh --uninstall   remove everything except your settings (~/.config/omaplex)
+#   ./install.sh --integrate   only the Hyprland rule, keybinding and theme hook, for an
+#                              omaplex installed some other way (e.g. the Arch package runs
+#                              this as `omaplex setup`)
 #
 # Environment:
 #   OMAPLEX_KEY="SUPER + ALT + P"   keybinding for `omaplex toggle` ("none" to skip)
 set -euo pipefail
 
-REPO="https://github.com/aplaceforallmystuff/omaplex.git"
+REPO="https://github.com/squatchware/omaplex.git"
 KEY="${OMAPLEX_KEY:-SUPER + ALT + P}"
 
 HYPR="$HOME/.config/hypr"
@@ -28,7 +31,8 @@ backup() { [[ -f $1 ]] && cp "$1" "$1.bak.$(date +%Y%m%d-%H%M%S)"; }
 
 uninstall() {
   say "Removing omaplex integration"
-  rm -f "$MODULE" "$BIN" "$DESKTOP" "$HOOK"
+  rm -f "$MODULE" "$DESKTOP" "$HOOK"
+  [[ -L $BIN ]] && rm -f "$BIN"   # only our symlink, never a packaged /usr/bin copy
   if grep -qF -- "-- omaplex" "$HYPR/hyprland.lua" 2>/dev/null; then
     backup "$HYPR/hyprland.lua"
     sed -i '/-- omaplex$/d' "$HYPR/hyprland.lua"
@@ -38,37 +42,44 @@ uninstall() {
   say "Done. Your settings and Plex login in ~/.config/omaplex were kept."
 }
 
-[[ ${1:-} == --uninstall ]] && { uninstall; exit 0; }
+mode="${1:-}"
+[[ $mode == --uninstall ]] && { uninstall; exit 0; }
 
 # ---------- preflight ----------
 command -v hyprctl >/dev/null || die "Hyprland not found. omaplex is built for Omarchy/Hyprland."
 [[ -f $HYPR/hyprland.lua ]] || die "No ~/.config/hypr/hyprland.lua. omaplex needs Omarchy's Lua Hyprland config."
-for cmd in git jq npm; do
+needs="jq"
+[[ $mode == --integrate ]] || needs="git jq npm"
+for cmd in $needs; do
   command -v "$cmd" >/dev/null || die "Missing '$cmd'. Try: omarchy pkg add ${cmd/npm/nodejs npm}"
 done
 
-# ---------- source ----------
-here="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || true)"
-if [[ -n $here && -f $here/package.json && -f $here/src/main.js ]]; then
-  dir="$here"
+if [[ $mode == --integrate ]]; then
+  BIN="$(command -v omaplex || true)"
+  [[ -n $BIN ]] || die "omaplex isn't on your PATH."
 else
-  if [[ -d $CLONE/.git ]]; then
-    say "Updating $CLONE"
-    git -C "$CLONE" pull --ff-only
+  # ---------- source ----------
+  here="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || true)"
+  if [[ -n $here && -f $here/package.json && -f $here/src/main.js ]]; then
+    dir="$here"
   else
-    say "Cloning into $CLONE"
-    git clone --depth 1 "$REPO" "$CLONE"
+    if [[ -d $CLONE/.git ]]; then
+      say "Updating $CLONE"
+      git -C "$CLONE" pull --ff-only
+    else
+      say "Cloning into $CLONE"
+      git clone --depth 1 "$REPO" "$CLONE"
+    fi
+    dir="$CLONE"
   fi
-  dir="$CLONE"
-fi
 
-say "Installing Electron (npm)"
-(cd "$dir" && npm install --no-audit --no-fund --loglevel=error)
+  say "Installing Electron (npm)"
+  (cd "$dir" && npm install --no-audit --no-fund --loglevel=error)
 
-# ---------- launcher + desktop entry ----------
-mkdir -p "$(dirname "$BIN")" "$(dirname "$DESKTOP")"
-ln -sf "$dir/bin/omaplex" "$BIN"
-cat >"$DESKTOP" <<EOF
+  # ---------- launcher + desktop entry ----------
+  mkdir -p "$(dirname "$BIN")" "$(dirname "$DESKTOP")"
+  ln -sf "$dir/bin/omaplex" "$BIN"
+  cat >"$DESKTOP" <<EOF
 [Desktop Entry]
 Name=Omaplex
 Comment=Floating CRT TV for Plex
@@ -79,6 +90,7 @@ Type=Application
 Categories=AudioVideo;Video;Player;
 StartupWMClass=omaplex
 EOF
+fi
 
 # ---------- Hyprland ----------
 bind=""

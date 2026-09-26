@@ -13,7 +13,7 @@
   <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-ff71ce?labelColor=0C0D11">
   <img alt="Omarchy" src="https://img.shields.io/badge/omarchy-lua%20config-01f9ff?labelColor=0C0D11">
   <img alt="Hyprland" src="https://img.shields.io/badge/hyprland-0.56%2B-fffb96?labelColor=0C0D11">
-  <img alt="GitHub stars" src="https://img.shields.io/github/stars/aplaceforallmystuff/omaplex?style=flat&color=05ffa1&labelColor=0C0D11">
+  <img alt="GitHub stars" src="https://img.shields.io/github/stars/squatchware/omaplex?style=flat&color=05ffa1&labelColor=0C0D11">
 </p>
 
 Tiling window managers are great until you want something on in the corner.
@@ -30,13 +30,13 @@ Needs Omarchy with the Lua Hyprland config (Hyprland 0.56+), plus `git`, `jq` an
 (`omarchy pkg add nodejs npm` if you don't have them).
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/aplaceforallmystuff/omaplex/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/squatchware/omaplex/main/install.sh | bash
 ```
 
 Or from a checkout (read `install.sh` first, it's short):
 
 ```sh
-git clone https://github.com/aplaceforallmystuff/omaplex && cd omaplex && ./install.sh
+git clone https://github.com/squatchware/omaplex && cd omaplex && ./install.sh
 ```
 
 Then press <kbd>Super</kbd> + <kbd>Alt</kbd> + <kbd>P</kbd>, sign in to Plex once, and you're watching.

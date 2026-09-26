@@ -3,13 +3,28 @@
 #   omaplex                launch, or focus the TV if it's already on
 #   omaplex toggle         launch / stash in special:omaplex / bring back to this workspace
 #   omaplex reload-theme   repaint the running TV from the current Omarchy theme
+#   omaplex setup          add the Hyprland rule, keybinding and theme hook (--remove to undo)
 set -euo pipefail
 dir="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
 state="$HOME/.config/omaplex/state.json"
 
+# A checkout uses its own node_modules; the Arch package uses the system electron.
+electron="${OMAPLEX_ELECTRON:-}"
+if [[ -z $electron ]]; then
+  if [[ -x $dir/node_modules/.bin/electron ]]; then
+    electron="$dir/node_modules/.bin/electron"
+  else
+    electron="$(command -v electron || true)"
+  fi
+fi
+
 case ${1:-} in
+  setup)
+    [[ ${2:-} == --remove ]] && exec "$dir/install.sh" --uninstall
+    exec "$dir/install.sh" --integrate
+    ;;
   -h | --help)
-    sed -n '3,6s/^# //p' "$0"
+    sed -n '3,7s/^# //p' "$0"
     exit 0
     ;;
 esac
@@ -18,13 +33,14 @@ client="$(hyprctl -j clients 2>/dev/null | jq -c 'first(.[] | select(.class == "
 
 if [[ ${1:-} == reload-theme ]]; then
   # The running instance picks this up via Electron's single-instance handoff.
-  [[ -n $client ]] && exec "$dir/node_modules/.bin/electron" "$dir" --reload-theme
+  [[ -n $client ]] && exec "$electron" "$dir" --reload-theme
   exit 0
 fi
 
 if [[ -z $client ]]; then
+  [[ -n $electron ]] || { echo "omaplex: Electron not found (run npm install, or install the electron package)" >&2; exit 1; }
   [[ ${1:-} == toggle ]] && shift
-  exec "$dir/node_modules/.bin/electron" "$dir" --class=omaplex --ozone-platform=wayland "$@"
+  exec "$electron" "$dir" --class=omaplex --ozone-platform=wayland "$@"
 fi
 
 addr="$(jq -r .address <<<"$client")"
