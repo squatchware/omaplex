@@ -6,7 +6,8 @@
 
 <p align="center">
   <b>A funky floating CRT television for Plex on <a href="https://omarchy.org">Omarchy</a>.</b><br>
-  It hovers over your tiling grid, follows you across workspaces, and wears your theme.
+  It hovers over your tiling grid, follows you across workspaces, and wears your theme.<br>
+  <a href="https://squatchware.dev/omaplex/">squatchware.dev/omaplex</a>
 </p>
 
 <p align="center">
