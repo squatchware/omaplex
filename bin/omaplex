@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# omaplex launcher.
+#   omaplex                launch, or focus the TV if it's already on
+#   omaplex toggle         launch / stash in special:omaplex / bring back to this workspace
+#   omaplex reload-theme   repaint the running TV from the current Omarchy theme
+set -euo pipefail
+dir="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+state="$HOME/.config/omaplex/state.json"
+
+case ${1:-} in
+  -h | --help)
+    sed -n '3,6s/^# //p' "$0"
+    exit 0
+    ;;
+esac
+
+client="$(hyprctl -j clients 2>/dev/null | jq -c 'first(.[] | select(.class == "omaplex")) // empty')"
+
+if [[ ${1:-} == reload-theme ]]; then
+  # The running instance picks this up via Electron's single-instance handoff.
+  [[ -n $client ]] && exec "$dir/node_modules/.bin/electron" "$dir" --reload-theme
+  exit 0
+fi
+
+if [[ -z $client ]]; then
+  [[ ${1:-} == toggle ]] && shift
+  exec "$dir/node_modules/.bin/electron" "$dir" --class=omaplex --ozone-platform=wayland "$@"
+fi
+
+addr="$(jq -r .address <<<"$client")"
+win="address:$addr"
+
+if [[ ${1:-} != toggle ]]; then
+  exec hyprctl dispatch "hl.dsp.focus({ window = \"$win\" })"
+fi
+
+if [[ $(jq -r .workspace.name <<<"$client") == special:omaplex ]]; then
+  # Bring it back to wherever you are, re-pinning if the TV's PIN switch is on.
+  ws="$(hyprctl -j activeworkspace | jq -r .id)"
+  hyprctl dispatch "hl.dsp.window.move({ window = \"$win\", workspace = \"$ws\" })" >/dev/null
+  if [[ $(jq -r '.pinned // true' "$state" 2>/dev/null) == true ]]; then
+    hyprctl dispatch "hl.dsp.window.pin({ window = \"$win\", action = \"on\" })" >/dev/null
+  fi
+  hyprctl dispatch "hl.dsp.focus({ window = \"$win\" })" >/dev/null
+else
+  # Pinned windows can't live on a special workspace, so unpin before stashing.
+  if [[ $(jq -r .pinned <<<"$client") == true ]]; then
+    hyprctl dispatch "hl.dsp.window.pin({ window = \"$win\", action = \"off\" })" >/dev/null
+  fi
+  hyprctl dispatch "hl.dsp.window.move({ window = \"$win\", workspace = \"special:omaplex\", follow = false })" >/dev/null
+fi

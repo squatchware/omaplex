@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>omaplex</title>
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Righteous&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="booting">
+  <div id="tv">
+    <svg class="antennas" viewBox="0 0 300 64" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+      <g class="ear ear-l"><line x1="150" y1="56" x2="46" y2="7" /><circle cx="46" cy="7" r="5.5" /></g>
+      <g class="ear ear-r"><line x1="150" y1="56" x2="258" y2="12" /><circle cx="258" cy="12" r="5.5" /></g>
+      <path class="dome" d="M122 64 Q122 42 150 42 Q178 42 178 64 Z" />
+      <circle class="dome-bolt" cx="150" cy="52" r="3" />
+    </svg>
+
+    <div class="cabinet">
+      <div class="bezel">
+        <div class="screen">
+          <webview id="plex" partition="persist:plex"></webview>
+          <canvas id="static" width="160" height="120"></canvas>
+          <div class="fx-layer scanlines"></div>
+          <div class="fx-layer vignette"></div>
+          <div class="fx-layer glare"></div>
+          <div class="crt-line"></div>
+          <div class="osd" id="osd"></div>
+        </div>
+        <div class="badge">omaplex</div>
+      </div>
+
+      <div class="panel">
+        <div class="knob-wrap">
+          <button class="knob" id="channel" title="Channel: change skin (scroll or click)"><i></i></button>
+          <label>CH</label>
+        </div>
+        <div class="knob-wrap">
+          <button class="knob" id="dim" title="Opacity (scroll or drag)"><i></i></button>
+          <label>OPAC</label>
+        </div>
+
+        <div class="switches">
+          <button class="sw" id="pin" title="Pin to every workspace">PIN</button>
+          <button class="sw" id="ghost" title="Fade when not focused">GHOST</button>
+          <button class="sw" id="size" title="Size: S / M / L">SIZE M</button>
+          <button class="sw" id="corner" title="Jump to next corner">MOVE</button>
+          <button class="sw" id="fx" title="CRT scanlines &amp; glass">FX</button>
+          <button class="sw" id="mute" title="Mute">MUTE</button>
+          <button class="sw" id="home" title="Back to Plex home">HOME</button>
+          <button class="sw" id="bare" title="Hide the cabinet">BARE</button>
+        </div>
+
+        <div class="grille" aria-hidden="true"></div>
+
+        <button class="power" id="power" title="Power off"><span class="led"></span></button>
+      </div>
+    </div>
+
+    <div class="legs" aria-hidden="true"><span></span><span></span></div>
+  </div>
+
+  <!-- Bare mode: a slim remote strip replaces the cabinet. -->
+  <div id="remote">
+    <span class="led"></span>
+    <span class="remote-title">omaplex</span>
+    <button class="rb" data-act="pin" title="Pin">&#128204;</button>
+    <button class="rb" data-act="size" title="Size">&#8645;</button>
+    <button class="rb" data-act="corner" title="Next corner">&#8631;</button>
+    <button class="rb" data-act="bare" title="Show the TV">&#128250;</button>
+    <button class="rb rb-power" data-act="power" title="Power off">&#9211;</button>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

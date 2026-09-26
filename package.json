@@ -1,0 +1,29 @@
+{
+  "name": "omaplex",
+  "version": "0.1.0",
+  "description": "A funky floating CRT TV for Plex on Omarchy/Hyprland",
+  "main": "src/main.js",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "electron . --class=omaplex --ozone-platform=wayland",
+    "capture": "scripts/capture.sh"
+  },
+  "dependencies": {
+    "electron": "^44.4.5"
+  },
+  "author": "Jim Christian",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aplaceforallmystuff/omaplex.git"
+  },
+  "keywords": [
+    "omarchy",
+    "hyprland",
+    "plex",
+    "electron",
+    "crt",
+    "retro",
+    "wayland"
+  ]
+}

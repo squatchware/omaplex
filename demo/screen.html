@@ -1,0 +1,28 @@
+<!doctype html>
+<!-- Stand-in "channel" for screenshots: plays a local video full-bleed.
+     Usage: demo/screen.html?src=file:///path/to/video.mp4&t=75 -->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  video { width: 100%; height: 100%; object-fit: cover; }
+</style>
+</head>
+<body>
+<video id="v" muted playsinline></video>
+<script>
+  const q = new URLSearchParams(location.search);
+  const v = document.getElementById("v");
+  v.src = q.get("src");
+  v.currentTime = Number(q.get("t") || 0);
+  v.play();
+  // Used by src/capture.js: jump to a moment and optionally freeze on it.
+  window.seek = (t, pause) => new Promise((resolve) => {
+    v.addEventListener("seeked", () => resolve(), { once: true });
+    v.currentTime = t;
+    pause ? v.pause() : v.play();
+  });
+</script>
+</body>
+</html>
