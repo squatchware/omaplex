@@ -1,0 +1,41 @@
+# Maintainer: Squatchware <https://github.com/squatchware>
+pkgname=omaplex
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="A floating CRT TV for Plex on Omarchy / Hyprland"
+arch=('any')
+url="https://github.com/squatchware/omaplex"
+license=('MIT')
+depends=('electron' 'hyprland' 'jq' 'bash')
+install=omaplex.install
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('49a1f5bb20433bb428ead7328b1d70096683760741690f70325814b518536860')
+
+package() {
+  cd "$pkgname-$pkgver"
+
+  # The app runs on the system electron: /usr/lib/omaplex has no node_modules,
+  # so bin/omaplex falls back to `electron` on PATH.
+  install -d "$pkgdir/usr/lib/$pkgname"
+  cp -r --no-preserve=ownership package.json src bin install.sh "$pkgdir/usr/lib/$pkgname/"
+  chmod 755 "$pkgdir/usr/lib/$pkgname/bin/omaplex" "$pkgdir/usr/lib/$pkgname/install.sh"
+  rm -f "$pkgdir/usr/lib/$pkgname/src/capture.js"   # screenshot tooling, not needed at runtime
+
+  install -d "$pkgdir/usr/bin"
+  ln -s "/usr/lib/$pkgname/bin/omaplex" "$pkgdir/usr/bin/omaplex"
+
+  install -Dm644 /dev/stdin "$pkgdir/usr/share/applications/$pkgname.desktop" <<EOF
+[Desktop Entry]
+Name=Omaplex
+Comment=Floating CRT TV for Plex
+Exec=omaplex toggle
+Icon=tv
+Terminal=false
+Type=Application
+Categories=AudioVideo;Video;Player;
+StartupWMClass=omaplex
+EOF
+
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}

@@ -1,0 +1,16 @@
+post_install() {
+  echo ":: omaplex installed. To float it over your grid, run (as your user):"
+  echo "     omaplex setup"
+  echo "   That adds ~/.config/hypr/omaplex.lua, SUPER + ALT + P and a theme hook."
+}
+
+post_upgrade() {
+  post_install
+}
+
+post_remove() {
+  echo ":: omaplex removed. If you ran 'omaplex setup', tidy up as your user with:"
+  echo "     rm -f ~/.config/hypr/omaplex.lua ~/.config/omarchy/hooks/theme-set.d/omaplex"
+  echo "     sed -i '/-- omaplex\$/d' ~/.config/hypr/hyprland.lua"
+  echo "   Your settings and Plex login stay in ~/.config/omaplex."
+}

@@ -39,7 +39,20 @@ Or from a checkout (read `install.sh` first, it's short):
 git clone https://github.com/squatchware/omaplex && cd omaplex && ./install.sh
 ```
 
-Then press <kbd>Super</kbd> + <kbd>Alt</kbd> + <kbd>P</kbd>, sign in to Plex once, and you're watching.
+### Arch package
+
+Prefer pacman to track it? Build the package (it runs on Arch's system `electron`), then wire it into Hyprland as your user:
+
+```sh
+git clone https://github.com/squatchware/omaplex && cd omaplex/packaging && makepkg -si
+omaplex setup            # Hyprland rule, Super + Alt + P and the theme hook
+```
+
+Before `pacman -R omaplex`, run `omaplex setup --remove`. An AUR package is on the way once AUR sign-ups reopen.
+
+### Then
+
+Press <kbd>Super</kbd> + <kbd>Alt</kbd> + <kbd>P</kbd>, sign in to Plex once, and you're watching.
 Pick a different key with `OMAPLEX_KEY="SUPER + SHIFT + T" ./install.sh`, or `OMAPLEX_KEY=none` for no binding.
 The installer skips the binding if the key is already taken.
 
@@ -51,6 +64,7 @@ The installer skips the binding if the key is already taken.
 | `omaplex` | Launch, or focus the TV if it's already on |
 | `omaplex toggle` | Same as the keybinding |
 | `omaplex reload-theme` | Repaint from the current Omarchy theme (the theme hook runs this for you) |
+| `omaplex setup` | Add the Hyprland rule, keybinding and theme hook (`--remove` to take them out) |
 | <kbd>Super</kbd> + drag | Move (or grab the cabinet or antennas) |
 | <kbd>Super</kbd> + right-drag | Resize freely |
 
