@@ -24,6 +24,8 @@ const DEFAULTS = {
   corner: "tr",
   bare: false,
   muted: false,
+  profile: "", // Plex Home profile to pick at "Select User" (omaplex profile)
+  pin: "",
 };
 
 // Window sizes (logical px) for the S/M/L presets, with and without the cabinet.
@@ -57,7 +59,9 @@ function loadState() {
 
 function saveState() {
   fs.mkdirSync(CONFIG_DIR, { recursive: true });
-  fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+  // Private: it can hold a Plex Home PIN.
+  fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2), { mode: 0o600 });
+  fs.chmodSync(STATE_FILE, 0o600);
 }
 
 function hypr(args) {
@@ -217,6 +221,13 @@ if (!primary) {
 } else {
   app.on("second-instance", (_e, argv) => {
     if (argv.includes("--reload-theme")) return checkTheme(0);
+    const profile = argv.find((a) => a.startsWith("--set-profile="));
+    if (profile) {
+      state.profile = profile.slice("--set-profile=".length);
+      state.pin = (argv.find((a) => a.startsWith("--set-pin=")) || "").slice("--set-pin=".length);
+      saveState();
+      return win?.webContents.send("state", state);
+    }
     if (win?.isMinimized()) win.restore();
     win?.focus();
   });

@@ -66,6 +66,7 @@ The installer skips the binding if the key is already taken.
 | `omaplex toggle` | Same as the keybinding |
 | `omaplex reload-theme` | Repaint from the current Omarchy theme (the theme hook runs this for you) |
 | `omaplex setup` | Add the Hyprland rule, keybinding and theme hook (`--remove` to take them out) |
+| `omaplex profile NAME [PIN]` | Same as the 📌 on Plex's "Select User" screen: boot straight into that Home profile (`--clear` to stop) |
 | <kbd>Super</kbd> + drag | Move (or grab the cabinet or antennas) |
 | <kbd>Super</kbd> + right-drag | Resize freely |
 
@@ -74,17 +75,41 @@ The installer skips the binding if the key is already taken.
 | Control | What it does |
 |---|---|
 | **CH** knob | Click, scroll or right-click to change channel (the TV's skin) |
+| **VOL** knob | Scroll or drag for volume, click to mute |
 | **OPAC** knob | Scroll or drag to fade the whole set from 25 to 100% |
+| ◀◀ · ▶❚❚ · ▶▶ | Back 10s · play/pause · forward 30s. Right-click ◀◀ / ▶▶ for the previous / next item |
 | **PIN** | Show on every workspace (Hyprland `pin`) |
 | **GHOST** | Fade right down whenever the TV isn't focused |
 | **SIZE** | Small / medium / large |
 | **MOVE** | Hop to the next screen corner |
 | **FX** | Scanlines, vignette and glass glare |
-| **MUTE** · **HOME** | Mute Plex · back to the Plex home screen |
+| **HOME** | Back to the Plex home screen |
 | **BARE** | Lose the cabinet: a clean 16:9 screen with a slim remote strip |
 | ⏻ | CRT switch-off, then quit |
 
-The speaker grille thumps while something's playing.
+The speaker grille thumps while something's playing. Bare mode's remote strip has the
+same transport buttons and mute.
+
+Media keys work too: omaplex shows up as an MPRIS player, so Omarchy's play/pause and
+next/previous keys (and `playerctl`) control whatever's on the TV.
+
+## Skip "Who's watching"
+
+A Plex Home account opens on the profile picker at every launch. omaplex adds a 📌 to each
+profile on that screen: click one and the TV boots straight into that profile from then on.
+If the profile has a PIN, the TV asks for it once. Click the lit pin again to get the picker
+back; while a profile is pinned, Plex's own **Switch User** menu still takes you there.
+
+Or from a terminal:
+
+```sh
+omaplex profile Jim          # the name on the profile's tile, any case
+omaplex profile Kids 1234    # with the profile's PIN
+omaplex profile --clear      # back to the picker
+```
+
+The name and PIN live in `~/.config/omaplex/state.json` (readable only by you). You can still
+switch users any time; omaplex only steps in when Plex first loads.
 
 ## Channels
 
@@ -111,7 +136,7 @@ current Omarchy theme's `colors.toml`. When you run `omarchy theme set`, a
 | `~/.config/omarchy/hooks/theme-set.d/omaplex` | Theme hook, installed with `omarchy hook install` |
 | `~/.local/bin/omaplex` | Launcher symlink |
 | `~/.local/share/applications/omaplex.desktop` | Launcher entry |
-| `~/.config/omaplex/` | Your settings (`state.json`) and Plex login |
+| `~/.config/omaplex/` | Your settings (`state.json`, including any auto-login profile and PIN) and Plex login |
 
 Want it in the Omarchy menu too? Add this to `~/.config/omarchy/extensions/omarchy-menu.jsonc`:
 

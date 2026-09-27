@@ -6,5 +6,6 @@ contextBridge.exposeInMainWorld("tv", {
   cycleCorner: () => ipcRenderer.invoke("cycle-corner"),
   quit: () => ipcRenderer.invoke("quit"),
   onFocus: (fn) => ipcRenderer.on("focus", (_e, focused) => fn(focused)),
+  onState: (fn) => ipcRenderer.on("state", (_e, state) => fn(state)),
   onTheme: (fn) => ipcRenderer.on("theme", (_e, colors) => fn(colors)),
 });

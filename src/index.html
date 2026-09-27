@@ -28,6 +28,11 @@
           <div class="fx-layer glare"></div>
           <div class="crt-line"></div>
           <div class="osd" id="osd"></div>
+          <form id="pin-prompt" autocomplete="off">
+            <span></span>
+            <input type="password" inputmode="numeric" maxlength="4" placeholder="····" aria-label="Profile PIN" />
+            <small>ENTER TO PIN · ESC TO CANCEL</small>
+          </form>
         </div>
         <div class="badge">omaplex</div>
       </div>
@@ -38,8 +43,18 @@
           <label>CH</label>
         </div>
         <div class="knob-wrap">
+          <button class="knob" id="vol" title="Volume (scroll or drag), click to mute"><i></i></button>
+          <label id="vol-label">VOL</label>
+        </div>
+        <div class="knob-wrap">
           <button class="knob" id="dim" title="Opacity (scroll or drag)"><i></i></button>
           <label>OPAC</label>
+        </div>
+
+        <div class="transport">
+          <button class="sw" id="back" title="Back 10s (right-click: previous)">&#9664;&#9664;</button>
+          <button class="sw" id="play" title="Play / pause">&#9654;&#10074;&#10074;</button>
+          <button class="sw" id="fwd" title="Forward 30s (right-click: next)">&#9654;&#9654;</button>
         </div>
 
         <div class="switches">
@@ -48,9 +63,8 @@
           <button class="sw" id="size" title="Size: S / M / L">SIZE M</button>
           <button class="sw" id="corner" title="Jump to next corner">MOVE</button>
           <button class="sw" id="fx" title="CRT scanlines &amp; glass">FX</button>
-          <button class="sw" id="mute" title="Mute">MUTE</button>
           <button class="sw" id="home" title="Back to Plex home">HOME</button>
-          <button class="sw" id="bare" title="Hide the cabinet">BARE</button>
+          <button class="sw wide" id="bare" title="Hide the cabinet">BARE</button>
         </div>
 
         <div class="grille" aria-hidden="true"></div>
@@ -66,6 +80,10 @@
   <div id="remote">
     <span class="led"></span>
     <span class="remote-title">omaplex</span>
+    <button class="rb" data-act="back" title="Back 10s (right-click: previous)">&#9194;</button>
+    <button class="rb" data-act="play" title="Play / pause">&#9199;</button>
+    <button class="rb" data-act="fwd" title="Forward 30s (right-click: next)">&#9193;</button>
+    <button class="rb" data-act="mute" title="Mute">&#128263;</button>
     <button class="rb" data-act="pin" title="Pin">&#128204;</button>
     <button class="rb" data-act="size" title="Size">&#8645;</button>
     <button class="rb" data-act="corner" title="Next corner">&#8631;</button>

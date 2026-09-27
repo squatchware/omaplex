@@ -186,6 +186,38 @@ body.off .fx-layer { opacity: 0; }
 }
 .osd.show { opacity: 1; }
 
+#pin-prompt {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0;
+  background: rgba(0, 0, 0, 0.82);
+  color: var(--osd);
+  font-family: "Righteous", monospace;
+  letter-spacing: 2px;
+  text-shadow: 0 0 6px var(--osd);
+}
+#pin-prompt.show { display: flex; }
+#pin-prompt span { font-size: 18px; }
+#pin-prompt small { font-size: 9px; opacity: 0.7; }
+#pin-prompt input {
+  width: 5.5em;
+  padding: 4px 0;
+  border: 2px solid var(--osd);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 22px;
+  letter-spacing: 8px;
+  text-align: center;
+  outline: none;
+}
+
 .badge {
   flex: 0 0 auto;
   text-align: center;
@@ -242,7 +274,11 @@ body.off .fx-layer { opacity: 0; }
 }
 .knob:active { transform: rotate(var(--rot)) scale(0.95); }
 
-.switches { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; width: 100%; }
+.knob.muted i { background: var(--accent); }
+.transport, .switches { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; width: 100%; }
+.transport { grid-template-columns: 1fr 1.3fr 1fr; }
+.transport .sw { font-family: system-ui, sans-serif; letter-spacing: -1px; }
+.switches .wide { grid-column: span 2; }
 .sw {
   height: 20px;
   padding: 0;
