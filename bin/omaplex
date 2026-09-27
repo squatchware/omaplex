@@ -5,6 +5,7 @@
 #   omaplex reload-theme   repaint the running TV from the current Omarchy theme
 #   omaplex setup          add the Hyprland rule, keybinding and theme hook (--remove to undo)
 #   omaplex profile NAME [PIN]  skip Plex's "Select User" and boot as this Home profile (--clear to stop)
+#   omaplex play-pause | next | previous | forward | back   control what's on the TV
 set -euo pipefail
 dir="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
 state="$HOME/.config/omaplex/state.json"
@@ -25,7 +26,7 @@ case ${1:-} in
     exec "$dir/install.sh" --integrate
     ;;
   -h | --help)
-    sed -n '3,8s/^# //p' "$0"
+    sed -n '3,9s/^# //p' "$0"
     exit 0
     ;;
 esac
@@ -37,6 +38,14 @@ if [[ ${1:-} == reload-theme ]]; then
   [[ -n $client ]] && exec "$electron" "$dir" --reload-theme
   exit 0
 fi
+
+case ${1:-} in
+  play-pause | next | previous | forward | back)
+    # Straight to the TV, unlike media keys which go to whichever player is active.
+    [[ -n $client ]] || { echo "omaplex: the TV is off" >&2; exit 1; }
+    exec "$electron" "$dir" --media="$1"
+    ;;
+esac
 
 if [[ ${1:-} == profile ]]; then
   [[ -n ${2:-} ]] || { echo "usage: omaplex profile NAME [PIN] | omaplex profile --clear" >&2; exit 1; }

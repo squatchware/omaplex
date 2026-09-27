@@ -2,6 +2,7 @@
 const { app, BrowserWindow, ipcMain, session } = require("electron");
 const { execFile } = require("node:child_process");
 const fs = require("node:fs");
+const net = require("node:net");
 const os = require("node:os");
 const path = require("node:path");
 
@@ -26,6 +27,8 @@ const DEFAULTS = {
   muted: false,
   profile: "", // Plex Home profile to pick at "Select User" (omaplex profile)
   pin: "",
+  away: false, // pause while stashed, resume when brought back
+  geom: null, // where you last dragged/resized it: { monitor, x, y, w, h }
 };
 
 // Window sizes (logical px) for the S/M/L presets, with and without the cabinet.
@@ -100,6 +103,38 @@ async function applyPin() {
   await dispatch(`hl.dsp.window.pin({ window = "${windowSelector(client)}", action = "${state.pinned ? "on" : "off"}" })`);
 }
 
+// Reapply a hand-dragged position/size if its monitor is still around.
+async function restoreGeom() {
+  const g = state.geom;
+  const monitors = (await hyprJson("monitors")) || [];
+  const client = await ourClient();
+  if (!g || !client || !monitors.some((m) => m.name === g.monitor)) return false;
+  const sel = windowSelector(client);
+  await dispatch(`hl.dsp.window.resize({ window = "${sel}", x = ${g.w}, y = ${g.h} })`);
+  await dispatch(`hl.dsp.window.move({ window = "${sel}", x = ${g.x}, y = ${g.y} })`);
+  lastGeom = JSON.stringify(g);
+  return true;
+}
+
+// Hyprland doesn't tell Wayland clients where they are, so check now and then
+// (and on the way out) whether the TV has been dragged or resized by hand.
+let lastGeom;
+async function trackGeom() {
+  const client = await ourClient();
+  if (!client || client.workspace.name.startsWith("special:")) return;
+  const monitors = (await hyprJson("monitors")) || [];
+  const mon = monitors.find((m) => m.id === client.monitor);
+  if (!mon) return;
+  const [x, y] = client.at;
+  const [w, h] = client.size;
+  const next = JSON.stringify({ monitor: mon.name, x, y, w, h });
+  if (lastGeom === undefined) lastGeom = next; // first sighting: nothing moved yet
+  if (next === lastGeom) return;
+  lastGeom = next;
+  state.geom = JSON.parse(next);
+  saveState();
+}
+
 async function place() {
   const client = await ourClient();
   const monitors = (await hyprJson("monitors")) || [];
@@ -120,6 +155,35 @@ async function place() {
   const sel = windowSelector(client);
   await dispatch(`hl.dsp.window.resize({ window = "${sel}", x = ${w}, y = ${h} })`);
   await dispatch(`hl.dsp.window.move({ window = "${sel}", x = ${x}, y = ${y} })`);
+  // A preset (SIZE / MOVE / BARE) replaces any hand-dragged spot.
+  state.geom = null;
+  saveState();
+  lastGeom = JSON.stringify({ monitor: mon.name, x, y, w, h });
+}
+
+// Tell the renderer when the TV is stashed on / brought back from the special
+// workspace, straight from Hyprland's event socket.
+function watchStash() {
+  const sig = process.env.HYPRLAND_INSTANCE_SIGNATURE;
+  const dir = process.env.XDG_RUNTIME_DIR;
+  if (!sig || !dir) return;
+  const sock = net.connect(path.join(dir, "hypr", sig, ".socket2.sock"));
+  let buf = "";
+  sock.on("data", async (chunk) => {
+    buf += chunk;
+    const lines = buf.split("\n");
+    buf = lines.pop();
+    for (const line of lines) {
+      const [event, data] = line.split(">>");
+      if (event !== "movewindowv2") continue;
+      const [addr, , wsName] = data.split(",");
+      const client = await ourClient();
+      if (client && client.address.replace(/^0x/, "") === addr.replace(/^0x/, "")) {
+        win?.webContents.send("stashed", wsName.startsWith("special:"));
+      }
+    }
+  });
+  sock.on("error", () => {});
 }
 
 function readThemeColors() {
@@ -180,7 +244,8 @@ function createWindow() {
   win.once("ready-to-show", async () => {
     for (let i = 0; i < 20 && !(await ourClient()); i++) await new Promise((r) => setTimeout(r, 150));
     await applyPin();
-    await place();
+    if (!(await restoreGeom())) await place();
+    setInterval(trackGeom, 4000);
   });
 }
 
@@ -212,7 +277,10 @@ ipcMain.handle("cycle-corner", async () => {
   return state;
 });
 
-ipcMain.handle("quit", () => app.quit());
+ipcMain.handle("quit", async () => {
+  await trackGeom();
+  app.quit();
+});
 
 // One TV per profile. A second launch just forwards its arguments here.
 const primary = app.requestSingleInstanceLock();
@@ -221,6 +289,8 @@ if (!primary) {
 } else {
   app.on("second-instance", (_e, argv) => {
     if (argv.includes("--reload-theme")) return checkTheme(0);
+    const media = argv.find((a) => a.startsWith("--media="));
+    if (media) return win?.webContents.send("media", media.slice("--media=".length));
     const profile = argv.find((a) => a.startsWith("--set-profile="));
     if (profile) {
       state.profile = profile.slice("--set-profile=".length);
@@ -241,6 +311,7 @@ app.whenReady().then(() => {
   });
   createWindow();
   watchTheme();
+  watchStash();
   if (process.env.OMAPLEX_CAPTURE) require("./capture")(win, process.env.OMAPLEX_CAPTURE);
 });
 

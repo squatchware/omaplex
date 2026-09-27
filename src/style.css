@@ -176,6 +176,10 @@ body.off .fx-layer { opacity: 0; }
 
 .osd {
   inset: auto auto 14px 18px;
+  max-width: calc(100% - 36px);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   font-family: "Righteous", monospace;
   font-size: 22px;
   letter-spacing: 2px;
@@ -278,7 +282,6 @@ body.off .fx-layer { opacity: 0; }
 .transport, .switches { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; width: 100%; }
 .transport { grid-template-columns: 1fr 1.3fr 1fr; }
 .transport .sw { font-family: system-ui, sans-serif; letter-spacing: -1px; }
-.switches .wide { grid-column: span 2; }
 .sw {
   height: 20px;
   padding: 0;

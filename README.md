@@ -66,9 +66,10 @@ The installer skips the binding if the key is already taken.
 | `omaplex toggle` | Same as the keybinding |
 | `omaplex reload-theme` | Repaint from the current Omarchy theme (the theme hook runs this for you) |
 | `omaplex setup` | Add the Hyprland rule, keybinding and theme hook (`--remove` to take them out) |
+| `omaplex play-pause` · `next` · `previous` · `forward` · `back` | Control the TV directly, whichever other player is active. Handy for a keybinding of your own |
 | `omaplex profile NAME [PIN]` | Same as the 📌 on Plex's "Select User" screen: boot straight into that Home profile (`--clear` to stop) |
 | <kbd>Super</kbd> + drag | Move (or grab the cabinet or antennas) |
-| <kbd>Super</kbd> + right-drag | Resize freely |
+| <kbd>Super</kbd> + right-drag | Resize freely. omaplex remembers where you left it until you pick a SIZE or MOVE preset |
 
 ## The controls
 
@@ -84,10 +85,12 @@ The installer skips the binding if the key is already taken.
 | **MOVE** | Hop to the next screen corner |
 | **FX** | Scanlines, vignette and glass glare |
 | **HOME** | Back to the Plex home screen |
+| **AWAY** | Pause when you stash the TV, resume when you bring it back |
 | **BARE** | Lose the cabinet: a clean 16:9 screen with a slim remote strip |
 | ⏻ | CRT switch-off, then quit |
 
-The speaker grille thumps while something's playing. Bare mode's remote strip has the
+The speaker grille thumps while something's playing, and each new title gets a caption
+across the bottom of the screen. Bare mode's remote strip has the
 same transport buttons and mute.
 
 Media keys work too: omaplex shows up as an MPRIS player, so Omarchy's play/pause and

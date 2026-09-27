@@ -69,6 +69,7 @@ function render() {
   $("vol-label").textContent = state.muted ? "MUTE" : "VOL";
   document.querySelector('.rb[data-act="mute"]').classList.toggle("on", state.muted);
   $("bare").classList.toggle("on", state.bare);
+  $("away").classList.toggle("on", state.away);
   $("size").textContent = `SIZE ${state.size}`;
   document.querySelector('.rb[data-act="pin"]').classList.toggle("on", state.pinned);
 }
@@ -109,12 +110,12 @@ function burst(ms = 450) {
 }
 
 let osdTimer;
-function osd(text) {
+function osd(text, ms = 1400) {
   const el = $("osd");
   el.textContent = text;
   el.classList.add("show");
   clearTimeout(osdTimer);
-  osdTimer = setTimeout(() => el.classList.remove("show"), 1400);
+  osdTimer = setTimeout(() => el.classList.remove("show"), ms);
 }
 
 function wiggle() {
@@ -179,6 +180,7 @@ knob($("vol"), () => volume, async (value) => {
 
 const actions = {
   pin: () => { osd(state.pinned ? "UNPINNED" : "PINNED ★ ALL WS"); return set({ pinned: !state.pinned }); },
+  away: () => { osd(state.away ? "AWAY OFF" : "AWAY: PAUSE WHEN STASHED"); return set({ away: !state.away }); },
   ghost: () => { osd(state.ghost ? "GHOST OFF" : "GHOST ON"); return set({ ghost: !state.ghost }); },
   fx: () => set({ fx: !state.fx }),
   mute: () => { plex.setAudioMuted(!state.muted); osd(state.muted ? "SOUND ON" : "MUTE"); return set({ muted: !state.muted }); },
@@ -195,7 +197,7 @@ const actions = {
   },
 };
 
-for (const id of ["pin", "ghost", "fx", "home", "size", "corner", "bare", "play", "back", "fwd", "power"]) {
+for (const id of ["pin", "ghost", "fx", "home", "size", "corner", "bare", "away", "play", "back", "fwd", "power"]) {
   $(id).addEventListener("click", actions[id]);
 }
 $("vol").addEventListener("click", () => { if (!$("vol").dragged) actions.mute(); });
@@ -245,8 +247,11 @@ const MEDIA_HOOK = `(() => {
   window.__omaplex = (cmd, arg) => {
     const m = media();
     if (!m) return null;
+    const was = !m.paused && !m.ended;
     let ok = true;
-    if (cmd === "toggle") {
+    if (cmd === "play" || cmd === "pause") {
+      handlers[cmd] ? handlers[cmd]({ action: cmd }) : m[cmd]();
+    } else if (cmd === "toggle") {
       const action = m.paused ? "play" : "pause";
       handlers[action] ? handlers[action]({ action }) : m.paused ? m.play() : m.pause();
     } else if (cmd in SKIP) {
@@ -258,7 +263,9 @@ const MEDIA_HOOK = `(() => {
       ok = !!handlers[cmd];
       if (ok) handlers[cmd]({ action: cmd });
     }
-    return { ok, playing: !m.paused && !m.ended, volume: m.volume };
+    const md = session.metadata;
+    const title = md ? [md.artist, md.title].filter(Boolean).join(" · ") : "";
+    return { ok, was, playing: !m.paused && !m.ended, volume: m.volume, title };
   };
 })()`;
 
@@ -277,15 +284,21 @@ async function transport(cmd) {
   if (!status) return osd("NO SIGNAL");
   if (!status.ok) return osd(cmd === "nexttrack" ? "NO NEXT" : "NO PREV");
   if (cmd === "previoustrack" || cmd === "nexttrack") burst(300);
-  // Play/pause reports the state from before the toggle took effect.
-  osd(cmd === "toggle" ? (status.playing ? "❚❚ PAUSE" : "▶ PLAY") : TRANSPORT_OSD[cmd]);
+  osd(cmd === "toggle" ? (status.was ? "❚❚ PAUSE" : "▶ PLAY") : TRANSPORT_OSD[cmd]);
 }
 
-// Keep the play state and VOL knob in step with Plex; the speaker grille thumps
-// along while something is playing.
+// Keep the play state and VOL knob in step with Plex, and caption each new
+// title like an old set changing programme. The speaker grille thumps along
+// while something is playing.
+let nowPlaying = "";
 setInterval(async () => {
   const status = await media("status");
   body.classList.toggle("playing", !!status?.playing);
+  const title = status?.title || "";
+  if (title !== nowPlaying) {
+    nowPlaying = title;
+    if (title) osd(`▶ ${title.toUpperCase()}`, 4000);
+  }
   if (status && status.volume !== volume) {
     volume = status.volume;
     render();
@@ -436,6 +449,22 @@ window.addEventListener("resize", fit);
   render();
   fit();
   window.tv.onState((next) => { state = next; render(); syncPicker(); });
+  // `omaplex play-pause` and friends, forwarded by the launcher.
+  const COMMANDS = { "play-pause": "toggle", next: "nexttrack", previous: "previoustrack", forward: "seekforward", back: "seekbackward" };
+  window.tv.onMedia((cmd) => COMMANDS[cmd] && transport(COMMANDS[cmd]));
+  // AWAY: pause when stashed, and resume only what we paused.
+  let pausedAway = false;
+  window.tv.onStashed(async (stashed) => {
+    if (stashed) {
+      pausedAway = false;
+      if (!state.away || !(await media("status"))?.playing) return;
+      pausedAway = !!(await media("pause"));
+    } else if (pausedAway) {
+      pausedAway = false;
+      await media("play");
+      osd("▶ WELCOME BACK");
+    }
+  });
   window.tv.onTheme((colors) => {
     theme = colors;
     if (state.skin !== "omarchy") return;
